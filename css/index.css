@@ -1,0 +1,18 @@
+
+a,label, :focus{outline:0 none;}
+table{width: 90%; margin: 0 auto; border: 1px solid #000; margin-bottom: 60px;}
+*{margin: 0; padding: 0;}
+table th{background: #f5f5f5; padding: 10px; text-align: left; line-height: 1.5;}
+table tr:hover{background: #f5f5f5; color: #1c94c4;}
+table tr:hover th{color: #000;}
+.title{width: 90%; margin: 0 auto; padding: 20px 10px; position: relative;}
+.title-con{font-size: 30px;}
+.action-bar{position: absolute; right: 10px; top:20px;}
+
+.ui-widget-content{background: #eee;}
+.ui-dialog .ui-dialog-content{background: #fff;}
+
+#detail_list .button{color: #cd3714; background: none; border: 0 none; cursor: pointer;}
+
+.enter-item {background: #fff; width: 188px; display: block; height: 40px; line-height: 20px; padding: 12px 10px; border: 1px solid #e6e6e6; border-radius: 6px; color: #333; font-size: 14px; font-weight: bold;
+	-webkit-appearance: none; -moz-appearance: none; appearance: none;}
