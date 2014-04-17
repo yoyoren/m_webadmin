@@ -96,6 +96,7 @@ table th{font-weight:bold}
 			<td>分类<br>(cat_id)</td>
 			<td>
 				<select id="cat_id">
+				<option value="0">请选择（配件可以不选）</option>
 				<?php
 					$contents = json_decode(file_get_contents("../goodsconfig.json"),true);
 					foreach($contents as $key=>$val){
@@ -103,6 +104,9 @@ table th{font-weight:bold}
 						echo $str;
 					}
 				?>
+				</select>
+				<select id="child_cat_id" style="display:none">
+					<option value="0">请选择</option>
 				</select>
 			</td>	
 		</tr>
@@ -162,8 +166,8 @@ table th{font-weight:bold}
 			<td>是否上架<br>(is_on_sale)</td>
 			<td>
 				<select id="is_on_sale">
-					<option value="1">上架</option>
 					<option value="0">下架</option>
+					<option value="1">直接上架(请谨慎使用)</option>
 				</select>
 			</td>	
 		</tr>
@@ -177,11 +181,33 @@ table th{font-weight:bold}
 			</td>	
 		</tr>
 		<tr>
-			<td>产品图片<br>(goods_thumb)</td>
+			<td>产品封面图片<br>(goods_thumb)</td>
 			<td>
-			 <input type="file" id="goods_image_file">
+			 <span id="goods_image_upload_tip"></span>
 			 <input type="hidden" id="goods_thumb">
-			 
+			 <form id="goods_image_file_form">
+				 <input type="file" id="goods_image_file" name="images">
+			 </form>
+			</td>	
+		</tr>
+		<tr>
+			<td>产品页面<br>（请联系猪爷索要）</td>
+			<td>
+			  <span id="goods_tmpl_upload_tip"></span>
+			  <input type="hidden" id="goods_tmpl">
+			  <form id="goods_tmpl_file_form">
+				 <input type="file" id="goods_tmpl_file" name="page">
+			 </form>
+			</td>	
+		</tr>
+		<tr>
+			<td>产品详情图片<br>(请联系猪爷索要)</td>
+			<td>
+			 <span id="goodsdetail_image_upload_tip"></span>
+			 <input type="hidden" id="goodsdetail_thumb">
+			 <form id="goodsdetail_image_file_form">
+				 <input type="file" id="goodsdetail_image_file" name="images">
+			 </form>
 			</td>	
 		</tr>
 		<tr>
@@ -218,25 +244,32 @@ table th{font-weight:bold}
 		var goods_sn = $('#goods_sn').val();
 		var goods_type = $('#goods_type').val();
 		var goods_name = $('#goods_name').val();
-		var goods_cato = $('#goods_cato').val();
+		var goods_cato = $('#cat_id').val();
+		var child_cato = $('#child_cat_id').val();
 		var goods_desc = $('#goods_desc').val();
 		var market_price = $('#market_price').val();
 		var keywords = $('#keywords').val();
 		var is_on_sale = $('#is_on_sale').val();
 		var is_alone_sale = $('#is_alone_sale').val();
+		var goods_tmpl = $('#goods_tmpl').val();
+		var goods_thumb = $('#goods_thumb').val();
 		$.post('api.php?action=add_goods',{
 			cat_id:cat_id,
 			goods_sn:goods_sn,
 			goods_type:goods_type,
 			goods_name:goods_name,
 			goods_cato:goods_cato,
+			child_cato:child_cato,
 			goods_desc:goods_desc,
+			goods_thumb:goods_thumb,
+			goods_tmpl:goods_tmpl,
 			market_price:market_price,
 			keywords:keywords,
 			is_on_sale:is_on_sale,
 			is_alone_sale:is_alone_sale
 		},function(d){
 			alert('添加成功');
+			location.reload();
 		},'json');
 	});
 
@@ -356,7 +389,25 @@ table th{font-weight:bold}
 		});
 	});
 
-
+	$('#cat_id').change(function(){
+		var cato = $(this).val();
+		var childCato = $('#child_cat_id');
+		if(cato!=0){
+			$.get('api.php?action=get_child_cato',{
+				cato:cato
+			},function(d){
+				var d=d.data;
+				var html='';
+				for(var i=0;i<d.length;i++){
+					html+='<option value="'+d[i].name+'">'+d[i].title+'</option>';
+				}
+				childCato.html(html).show();
+			},'json');
+		}else{
+			childCato.hide();
+			childCato.html('<option value="0">请选择</option>');
+		}
+	});
 
 	var Upload = function(opt){
 		this.opt = {
@@ -369,45 +420,87 @@ table th{font-weight:bold}
 		}
 
 		this.jqForm = $('#'+this.opt.formId);
-		this.jqInput = $('#'+this.opt.inputId);
-		this.init();
-		
-	}
-	
-	Upload.prototype = {
-		init:function(){
-			var me = this;
-			var iframeId = this.opt.iframeId;
-			var jqForm = this.jqForm;
-			jqForm.attr('target',iframeId);
-			jqForm.attr('action',this.opt.url);
-			jqForm.attr('enctype','multipart/form-data');
-			jqForm.attr('method','post');
-			jqForm.after('<iframe name="'+iframeId+'" id="'+iframeId+'" width="0" height="0"></iframe>');
-			this.jqInput.change(function(){
-				me.opt.upload();
-				jqForm.submit();
-			});
-			setTimeout(function(){
-				var iframe = $('#'+iframeId)[0];
-				iframe.onload = iframe.onreadystatechange = function(){
-					var ret = iframe.contentWindow.ret;
-					me.opt.callback(ret);
-				}
-			},0);
-		}
-	}
-							new Upload({
-									inputId:'mes_input',
-									formId:'mes_form',
-									url:'api.php?action=uploadgoodsimage',
-									upload:function(){
-										$('#upload_tip').html('鍥剧墖姝ｅ湪涓婁紶涓�...');
-									},
-									callback:function(d){
+		this.jqInput = $('#'
+      +
+      this.opt.inputId);
+      this.init();
 
-									}
-								});
-														
+      }
+
+      Upload.prototype = {
+        init : function() {
+          var me = this;
+          var iframeId = this.opt.iframeId;
+          var jqForm = this.jqForm;
+          jqForm.attr('target', iframeId);
+          jqForm.attr('action', this.opt.url);
+          jqForm.attr('enctype', 'multipart/form-data');
+          jqForm.attr('method', 'post');
+          jqForm.after('<iframe name="' + iframeId + '" id="' + iframeId + '" width="0" height="0"></iframe>');
+          this.jqInput.change(function() {
+            me.opt.upload();
+            jqForm.submit();
+          });
+          setTimeout(function() {
+            var iframe = $('#'+iframeId)[0];
+            iframe.onload = iframe.onreadystatechange = function() {
+              var ret = iframe.contentWindow.ret;
+              me.opt.callback(ret);
+            }
+          }, 0);
+        }
+      }
+
+	  //上传产品图片
+      new Upload({
+        inputId : 'goods_image_file',
+        formId : 'goods_image_file_form',
+        iframeId : 'goods_image_file_iframe',
+        url : 'api.php?action=uploadgoodsimage',
+        upload : function(d) {
+			$('#goods_image_upload_tip').html('正在上传...')
+        },
+        callback : function(d) {
+			if(d&&d.code==0){
+				$('#goods_image_upload_tip').html('上传成功');
+				$('#goods_thumb').val(d.url);
+				$('#goods_image_upload_tip').append('<img src="/'+d.url+'" width="70"/>');
+			}
+        }
+      });
+
+
+	   new Upload({
+        inputId : 'goodsdetail_image_file',
+        formId : 'goodsdetail_image_file_form',
+        iframeId : 'goodsdetail_image_file_iframe',
+        url : 'api.php?action=uploadgoodsdetailimage',
+        upload : function(d) {
+			$('#goodsdetail_image_upload_tip').html('正在上传...')
+        },
+        callback : function(d) {
+			if(d&&d.code==0){
+				$('#goodsdetail_image_upload_tip').html('上传成功');
+				$('#goodsdetail_image_upload_tip').append('<img src="/'+d.url+'" width="70"/>');
+			}
+        }
+      });
+
+	  //上传产品页面
+	  new Upload({
+        inputId : 'goods_tmpl_file',
+        formId : 'goods_tmpl_file_form',
+        iframeId : 'goods_tmpl_file_iframe',
+        url : 'api.php?action=uploadgoodstmpl',
+        upload : function(d) {
+			$('#goods_tmpl_upload_tip').html('正在上传...')
+        },
+        callback : function(d) {
+			if(d&&d.code==0){
+				$('#goods_tmpl_upload_tip').html('上传成功');
+				$('#goods_tmpl').val(d.url);
+			}
+        }
+      });
 </script>
 </html>

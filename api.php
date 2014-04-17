@@ -63,6 +63,13 @@ switch($action){
 			echo 'fail';
 		}
 		break;
+   case 'get_child_cato':
+	    $cato = ANTI_SPAM($_GET['cato']);
+		$CAKE_CATO = file_get_contents("../goodsconfig.json");
+		$CAKE_CATO = json_decode($CAKE_CATO,true);
+		$CAKE_CATO = $CAKE_CATO[$cato]['cato'];
+		echo json_encode(array('data'=>$CAKE_CATO));
+        break;
    case 'del_goods_page_cache':
 	    $id = ANTI_SPAM($_POST['id']);
         $REDIS_CLIENT->del('goods_page'.$id);
@@ -137,22 +144,128 @@ switch($action){
 	   $goods_type = ANTI_SPAM($_POST['goods_type']);
 	   $goods_name = ANTI_SPAM($_POST['goods_name']);
 	   $goods_desc = ANTI_SPAM($_POST['goods_desc']);
-	   //$goods_cato = $_POST['goods_cato'];
+	   $goods_cato = ANTI_SPAM($_POST['goods_cato'],array('empty'=>true));
+	   $child_cato = ANTI_SPAM($_POST['child_cato'],array('empty'=>true));
+
+	   //商品小图地址
+	   $goods_thumb = ANTI_SPAM($_POST['goods_thumb']);
+	   
+	   //商品模板地址
+	   $goods_tmpl = ANTI_SPAM($_POST['goods_tmpl']);
+	 
 
 	   $market_price = ANTI_SPAM($_POST['market_price']);
-	   $is_on_sale = ANTI_SPAM($_POST['is_on_sale']);
-	   $is_alone_sale = ANTI_SPAM($_POST['is_alone_sale']);
+	   $is_on_sale = ANTI_SPAM($_POST['is_on_sale'],array('empty'=>true));
+	   $is_alone_sale = ANTI_SPAM($_POST['is_alone_sale'],array('empty'=>true));
 	   $keywords  = ANTI_SPAM($_POST['keywords']);
        
 	   $add_time = time();
 	   $sql = "INSERT INTO ecs_goods (cat_id,goods_sn,goods_name,goods_name_style,click_count,brand_id,provider_name,goods_number,goods_weight,market_price,shop_price,promote_price,promote_start_date,promote_end_date,warn_number,keywords,goods_brief,goods_desc,goods_thumb,goods_img,original_img,is_real,extension_code,is_on_sale,is_alone_sale,is_shipping,integral,add_time,sort_order,is_delete,is_best,is_new,is_hot,is_promote,bonus_type_id,last_update,goods_type,seller_note,give_integral,rank_integral,suppliers_id,is_check,is_sugar) values('{$cat_id}','{$goods_sn}','{$goods_name}','+',0,4,'',0,'0.000','{$market_price}','0.00','0.00',0,0,0,'{$keywords}','','{$goods_desc}','','','',1,'',{$is_on_sale},{$is_alone_sale},0,0,{$add_time},100,0,0,0,0,0,0,{$add_time},{$goods_type},'',-1,-1,0,NULL,1)";
 	   
 	   $data = $db->query($sql);
-	   
+	   $gen_id = $db -> insert_id();
+	   $filename = substr($goods_sn,0,3);
+
+	   //如果是增加蛋糕 就需要更新配置的JSON
+
+	   if($goods_cato&&$child_cato){
+
+			$CAKE_CATO = file_get_contents("../goodsconfig.json");
+			$CAKE_CATO = json_decode($CAKE_CATO,true);
+
+			
+			for($i=0;$i<count($CAKE_CATO[$goods_cato]['cato']);$i++){
+				if($CAKE_CATO[$goods_cato]['cato'][$i]['name']==$child_cato){
+					array_push($CAKE_CATO[$goods_cato]['cato'][$i]['data'], $gen_id);
+				}
+			}
+	   }
+	   file_put_contents("../goodsconfig.json",json_encode($CAKE_CATO));
+
+	   copy(ROOT_PATH.$goods_thumb,ROOT_PATH.'themes/default/images/sgoods/' . $filename . '.jpg');
+	   copy(ROOT_PATH.$goods_tmpl,ROOT_PATH.'tmpl/cake_'.$gen_id.'.htm');
 	   echo json_encode(array(
 		   'data'=>$data,
 		   'code'=>0,
 	   ));
-   break;
+	   break;
+   //上传页面的模板
+   case 'uploadgoodstmpl':
+			$file = $_FILES['page'];
+			$size = $file['size'];
+			$type = $file['type'];
+
+			if($size>1*1024*1024){
+				 echo '<script>window.ret="'.json_encode(array('code'=>1,'msg'=>'文件体积过大,不能大于1MB')).'"</script>';
+				 return;
+			}
+			
+	
+			$filename = date("YmdHis");
+			$url = 'tmpl/' . $filename . '.htm';  
+			$upfile = ROOT_PATH.$url;
+			if(is_uploaded_file($file['tmp_name'])){  
+			   if(!move_uploaded_file($file['tmp_name'], $upfile)){  
+					 '<script>window.ret="'.json_encode(array('code'=>3,'msg'=>'server error')).'"</script>'; 
+					 return;
+				}
+			}
+			echo "<script>window.ret=".json_encode(array('code'=>0,'msg'=>'success','url'=>$url))."</script>";
+	   break;
+   //上传封面图片
+   case 'uploadgoodsimage':
+			//$goods_sn = ANTI_SPAM($_POST['goods_sn']);
+		    $file = $_FILES['images'];
+			$images = $_POST['images'];
+			$size = $file['size'];
+			$type = $file['type'];
+			if($size>1*1024*1024){
+				 echo '<script>window.ret="'.json_encode(array('code'=>1,'msg'=>'文件体积过大,不能大于1MB')).'"</script>';
+				 return;
+			}
+			
+			
+			if($type!='image/jpeg'&&$type!='image/jpg'&&$type!='image/png'&&$type!='image/gif'){
+				 echo "<script>window.ret='".json_encode(array('code'=>2,'msg'=>'文件格式不支持'))."'</script>";
+				 return;
+			}
+			$filename = date("YmdHis");
+			$url = 'themes/default/images/sgoods/' . $filename . '.jpg';  
+			$upfile = ROOT_PATH.$url;
+			if(is_uploaded_file($file['tmp_name'])){  
+			   if(!move_uploaded_file($file['tmp_name'], $upfile)){  
+					 '<script>window.ret="'.json_encode(array('code'=>3,'msg'=>'server error')).'"</script>'; 
+					 return;
+				}
+			}
+			echo "<script>window.ret=".json_encode(array('code'=>0,'msg'=>'success','url'=>$url))."</script>";
+		break;
+	case 'uploadgoodsdetailimage':
+			//$goods_sn = ANTI_SPAM($_POST['goods_sn']);
+		    $file = $_FILES['images'];
+			$images = $_POST['images'];
+			$size = $file['size'];
+			$type = $file['type'];
+			if($size>1*1024*1024){
+				 echo '<script>window.ret="'.json_encode(array('code'=>1,'msg'=>'文件体积过大,不能大于1MB')).'"</script>';
+				 return;
+			}
+			
+			
+			if($type!='image/jpeg'&&$type!='image/jpg'&&$type!='image/png'&&$type!='image/gif'){
+				 echo "<script>window.ret='".json_encode(array('code'=>2,'msg'=>'文件格式不支持'))."'</script>";
+				 return;
+			}
+			$filename = $file['name'];
+			$url = 'img/pro/'.$filename;  
+			$upfile = ROOT_PATH.$url;
+			if(is_uploaded_file($file['tmp_name'])){  
+			   if(!move_uploaded_file($file['tmp_name'], $upfile)){  
+					 '<script>window.ret="'.json_encode(array('code'=>3,'msg'=>'server error')).'"</script>'; 
+					 return;
+				}
+			}
+			echo "<script>window.ret=".json_encode(array('code'=>0,'msg'=>'success','url'=>$url))."</script>";
+		break;
  }
 ?>
