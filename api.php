@@ -83,7 +83,7 @@ switch($action){
 		break;
    
    case 'get_goods_list':
-	   $data = $db->getAll('select * from ecs_goods');
+		$data = $db->getAll('select * from ecs_goods');
 		echo json_encode(array('data'=>$data));
 		break;
    
@@ -105,15 +105,18 @@ switch($action){
    case 'add_attr':
 		$goods_id = ANTI_SPAM($_POST['goods_id']);
 		$attr_type = ANTI_SPAM($_POST['attr_type']);
-		$attr_price = ANTI_SPAM($_POST['attr_price']);
+		$attr_price = ANTI_SPAM($_POST['attr_price'],array('empty'=>true));
 		$attr_value = ANTI_SPAM($_POST['attr_value']);
+		$attr_people = $_POST['attr_people'];
+		$attr_weight = $_POST['attr_weight'];
 		$sql = "INSERT INTO ecs_goods_attr (goods_id,attr_id,attr_value,attr_price) values('{$goods_id}','{$attr_type}','{$attr_value}','{$attr_price}');";
 		$data = $db->query($sql);
 		
 		//添加商品到客服系统
-		$sql_call = "INSERT INTO call_goods_attr (goods_id,attr_id,attr_value,attr_price) values('{$goods_id}','{$attr_type}','{$attr_value}','{$attr_price}');";
-		$res = $db->query($sql_call);
-
+		if($attr_type == 6){
+			$sql_call = "INSERT INTO call_goods_attr (goods_id,attr_id,attr_value,attr_price) values('{$goods_id}','{$attr_type}','{$attr_weight}','{$attr_price}');";
+			$res = $db->query($sql_call);
+		}
 	   echo json_encode(array(
 		    'code'=>0,
 			'data'=>$data,
@@ -212,9 +215,8 @@ switch($action){
 			}
 			echo "<script>window.ret=".json_encode(array('code'=>0,'msg'=>'success','url'=>$url))."</script>";
 	   break;
-   //上传封面图片
-   case 'uploadgoodsimage':
-			//$goods_sn = ANTI_SPAM($_POST['goods_sn']);
+		//上传封面图片
+		case 'uploadgoodsimage':
 		    $file = $_FILES['images'];
 			$images = $_POST['images'];
 			$size = $file['size'];
@@ -257,6 +259,8 @@ switch($action){
 				 return;
 			}
 			$filename = $file['name'];
+
+			//这个文件夹存放的是详情图片
 			$url = 'img/pro/'.$filename;  
 			$upfile = ROOT_PATH.$url;
 			if(is_uploaded_file($file['tmp_name'])){  
@@ -267,5 +271,59 @@ switch($action){
 			}
 			echo "<script>window.ret=".json_encode(array('code'=>0,'msg'=>'success','url'=>$url))."</script>";
 		break;
+	case 'get_banner_list':
+		$banner = file_get_contents("../indexconfig.json");
+		$banner = json_decode($banner,true);
+		echo json_encode(array('data'=>$banner));
+		break;
+	 
+	 case 'add_banner':
+		 $pos = $_POST['pos'];
+		 $title = $_POST['title'];
+		 $desc = $_POST['desc'];
+		 $link = $_POST['link'];
+		 
+		 $banner_thumb = $_POST['banner_thumb'];
+		 $banner = file_get_contents("../indexconfig.json");
+		 $banner = json_decode($banner,true);
+		 $new_banner = array(
+			'desc'=>$desc,
+			'title'=>$title,
+			'img'=>$banner_thumb,
+			'link'=>$link
+		 );
+		 if($pos == 1){
+			array_unshift($banner,$new_banner);
+		 }else if($pos == 2){
+			array_push($banner,$new_banner);
+		 }
+		 $banner = json_encode($banner);
+		 if(file_put_contents("../indexconfig.json",$banner)){
+			echo 'success';
+		 }else{
+			echo 'fail';
+		 }
+		 
+		break;
+
+	 case 'del_banner':
+		 $index = $_POST['index'];
+		 $banner = file_get_contents("../indexconfig.json");
+		 $banner = json_decode($banner,true);
+		 $res = array();
+
+		 for($i=0;$i<count($banner);$i++){
+			if($i!=$index){
+				array_push($res,$banner[$i]);
+			}
+		 }
+
+		 $banner = json_encode($res);
+		 if(file_put_contents("../indexconfig.json",$banner)){
+			echo 'success';
+		 }else{
+			echo 'fail';
+		 }
+		 break;
  }
 ?>

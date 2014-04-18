@@ -1,12 +1,13 @@
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<?php include('inc/header.php');?>
 </head>
 <body>
-	<h2><a>页面缓存管理</a></h2>
+	<?php require_once('api.php');?>
+    <?php include('inc/menu.php');?>
+	<h2>页面缓存管理</h2>
 	<?php 
 		define('IN_ECS', true);
-		require ('../includes/init.php');
 		$page_cache = $REDIS_CLIENT -> keys('goods_page*');
 		$html = '<table><tr><td>页面id</td><td>操作1</td><td>操作2</td></tr>';
 		for($i=0;$i<count($page_cache);$i++){
@@ -21,14 +22,9 @@
 		 function a($b){
 		    echo $b();
 		 }
-		  function c() {return 'aaaaa';}
-		 a('c');
 	?>
-	<h2>管理首页轮播</h2>
-	<h2>商品管理</h2>
-</body>
 
-<script src="http://www.mescake.com/script/jquery-1.10.min.js"></script>
+</body>
 <script>
 $('.page_detail').click(function(){
 	var id = $(this).data('id').replace('goods_page','');

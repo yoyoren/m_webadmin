@@ -1,26 +1,13 @@
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<link href="css/ui-lightness/jquery-ui-1.10.4.css" rel="stylesheet">
-<link href="css/index.css" rel="stylesheet">
-<script src="js/jquery-1.10.2.js"></script>
-<script src="js/jquery-ui-1.10.4.js"></script>
-<style>
-.button{font-size:12px}
-table{font-size:12px;}
-table td {border-top:solid #000 1px;padding:10px;margin:0;}
-table th{font-weight:bold}
-#add_attr_dialog input,#add_dialog input{width:200px}
-#add_attr_dialog select,#add_dialog select{width:200px}
-</style>
+	<?php include('inc/header.php');?>
 </head>
 <body>
-    <?php 
-		require_once('api.php');
-	?>
+   <?php require_once('api.php');?>
+   <?php include('inc/menu.php');?>
 	<div class="display-zone">
 		<div class="title">
-			<span class="title-con">已有商品</span>
+			<span class="title-con">产品管理</span>
 			<span class="action-bar">
 				<button class="button" id="add_new_button">添加新商品</button>
 			</span>
@@ -33,7 +20,7 @@ table th{font-weight:bold}
 				<th>关键字<br>(keywords)</th>
 				<th>商品描述<br>(goods_desc)</th>
 				<th>是否上架<br>(is_on_sale)</th>
-				<th>价格<br>(market_price)</th>
+				<th>价格</th>
 				<th>操作</th>
 			</tr>
 		</table>
@@ -48,6 +35,7 @@ table th{font-weight:bold}
 				<td>类型(attr_type):</td>
 				<td>
 					<select id="attr_type">
+						<option value="0">请选择</option>
 						<option value="6">产品规格</option>
 						<option value="3">产品用途</option>
 						<option value="7">是否含糖</option>
@@ -55,15 +43,67 @@ table th{font-weight:bold}
 						<option value="9">原料</option>
 						<option value="11">产品描述</option>
 					</select>
+					
 				</td>	
 			</tr>
-			<tr>
+			<tr id="attr_price_col">
 				<td>价格(attr_price):</td>
 				<td><input id="attr_price" class="enter-item" value="0"/></td>	
 			</tr>
 			<tr>
 				<td>描述(attr_value):</td>
-				<td><input id="attr_value" class="enter-item" /></td>	
+				<td>
+					<input id="attr_value" class="enter-item" />
+					<select id="attr_weight" style="display:none">
+						<option>1.0磅</option>
+						<option>2.0磅</option>
+						<option>3.0磅</option>
+						<option>5.0磅</option>
+						<option>10.0磅</option>
+						<option>15.0磅</option>
+						<option>20.0磅</option>
+						<option>25.0磅</option>
+						<option>30.0磅</option>
+					</select>
+					<select id="attr_size" style="display:none">
+						<option value="">无准确规格</option>
+						<option>13cm*13cm</option>
+						<option>14cm*14cm</option>
+						<option>15cm*15cm</option>
+						<option>16cm*16cm</option>
+						<option>17cm*17cm</option>
+						<option>23cm*23cm</option>
+						<option>30cm*30cm</option>
+						<option>36cm*36cm</option>
+						<option>50cm*50cm</option>
+						<option>56cm*56cm</option>
+						<option>62cm*62cm</option>
+						<option>70cm*70cm</option>
+					</select>
+					<select id="attr_people" style="display:none">
+						<option>适合3-4人食用</option>
+						<option>适合4-5人食用</option>
+						<option>适合5-6人食用</option>
+						<option>适合7-8人食用</option>
+						<option>适合11-12人食用</option>
+						<option>适合15-20人食用</option>
+						<option>适合30-40人食用</option>
+						<option>适合40-50人食用</option>
+						<option>适合50-60人食用</option>
+						<option>适合60-70人食用</option>
+						<option>适合70-80人食用</option>
+						<option>适合80-100人食用</option>
+						<option>适合100-120人食用</option>
+					</select>
+					<select id="attr_wine" style="display:none">
+						<option>含酒</option>
+						<option>不含酒</option>
+					</select>
+					<select id="attr_sugar" style="display:none">
+						<option>含糖</option>
+						<option>不含糖</option>
+					</select>
+				</td>	
 			</tr>
 			<tr>
 				<td>操作</td>
@@ -82,6 +122,7 @@ table th{font-weight:bold}
 			<td>商品类型<br>(goods_type):</td>
 			<td>
 				<select id="goods_type">
+					
 					<option value="1">蛋糕</option>
 					<option value="2">附属配件（例如餐具，蜡烛）</option>
 					<option value="3">鲜花</option>
@@ -228,11 +269,24 @@ table th{font-weight:bold}
 		var attr_type = $('#attr_type').val();
 		var attr_price= $('#attr_price').val();
 		var attr_value= $('#attr_value').val();
+		var attr_weight = $('#attr_weight').val();
+		var attr_people = $('#attr_people').val();
+		var attr_size = $('#attr_size').val();
+		if(attr_type==6){
+			attr_value = attr_weight+':'+attr_size+attr_people;
+		}else if(attr_type==7){
+			attr_value = $('#attr_sugar').val();
+		}else if(attr_type==8){
+			attr_value = $('#attr_wine').val();
+		}
+
 		$.post('api.php?action=add_attr',{
 			goods_id:goods_id,
 			attr_type:attr_type,
 			attr_price:attr_price,
-			attr_value:attr_value
+			attr_value:attr_value,
+			attr_weight:attr_weight,
+			attr_people:attr_people
 		},function(d){
 			alert('添加成功');
 		},'json');
@@ -293,13 +347,13 @@ table th{font-weight:bold}
 		  html+='<tr><td>'+current.goods_sn+'</td>'; 
 		   html+='<td>'+current.goods_name+'</td>';
 		   html+='<td><img src="/themes/default/images/sgoods/'+current.goods_sn.substring(0,3)+'.jpg" width="75" onerror="$(this).remove()"></td>';
-		   html+='<td>'+current.keywords+'</td>';
-		   html+='<td>'+$(current.goods_desc).text()+'</td>';
+		   html+='<td width="150">'+current.keywords+'</td>';
+		   html+='<td width="150">'+$(current.goods_desc).text()+'</td>';
 		   
 		   html+='<td>'+onsale+'</td>';
 		   //html+='<td>'+current.is_alone_sale+'</td>';
 		    html+='<td>'+current.market_price+'</td>';
-		   html+='<td>\
+		   html+='<td width="150">\
 		   <button class="button expand_button" data-id="'+current.goods_id+'">详细</button>\
 		   <button class="button offline_button" data-id="'+current.goods_id+'">下架</button>\
 		   <button class="button online_button" data-id="'+current.goods_id+'">上架</button>\
@@ -408,7 +462,39 @@ table th{font-weight:bold}
 			childCato.html('<option value="0">请选择</option>');
 		}
 	});
+	
+	$('#attr_type').change(function(){
+		var type = $(this).val();
+		$('#attr_weight').hide();
+		$('#attr_people').hide();
+		$('#attr_price_col').hide();
+		$('#attr_wine').hide();
+		$('#attr_sugar').hide();
+		$('#attr_size').hide();
+		$('#attr_value').show();
+		switch(type){
+			case '3':break;
+			case '6':
+			$('#attr_weight').show();
+			$('#attr_people').show();
+			$('#attr_size').show();
+			$('#attr_price_col').show();
 
+			$('#attr_value').hide();
+			break; 
+			case '7':
+			$('#attr_sugar').show();
+			$('#attr_value').hide();
+			break; 
+			case '8':
+			$('#attr_wine').show();
+			$('#attr_value').hide();
+			break; 
+			case '9':break; 
+			case '11':break; 
+		}
+	});
+	
 	var Upload = function(opt){
 		this.opt = {
 			formId:opt.formId,
