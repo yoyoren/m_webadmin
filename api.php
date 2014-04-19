@@ -40,7 +40,7 @@ function check_login(){
 if($action!='admin_login'){
 	if(!check_login()){
 		echo '<script>location.href="login.php"</script>';
-		echo json_encode(array('code'=>'100001','msg'=>'login_frist'));
+		echo json_encode(array('code'=>'10001','msg'=>'login_frist'));
 		die;
 	}
 }
@@ -179,7 +179,8 @@ switch($action){
 			
 			for($i=0;$i<count($CAKE_CATO[$goods_cato]['cato']);$i++){
 				if($CAKE_CATO[$goods_cato]['cato'][$i]['name']==$child_cato){
-					array_push($CAKE_CATO[$goods_cato]['cato'][$i]['data'], $gen_id);
+					//新加的蛋糕都放在第一顺位
+					array_unshift($CAKE_CATO[$goods_cato]['cato'][$i]['data'], $gen_id);
 				}
 			}
 	   }

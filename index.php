@@ -116,7 +116,7 @@
 	<table cellpadding="0" cellspacing="0" style="border-top:0 none;">
 		<tr>
 			<td>SN<br>(goods_sn):</td>
-			<td><input id="goods_sn" class="enter-item"/></td>	
+			<td><input id="goods_sn" class="enter-item" placeholder="货号前3位不能重复"/></td>	
 		</tr>
 		<tr>
 			<td>商品类型<br>(goods_type):</td>
@@ -131,7 +131,7 @@
 		</tr>
 		<tr>
 			<td>名称<br>(goods_name)</td>
-			<td><input id="goods_name"  class="enter-item" class="enter-item"/></td>	
+			<td><input id="goods_name"  class="enter-item" placeholder="最多20个字"/></td>	
 		</tr>
 		<tr>
 			<td>分类<br>(cat_id)</td>
@@ -157,15 +157,15 @@
 		</tr>
 		<tr>
 			<td>市场价格<br>(market_price,蛋糕填写1磅价格)</td>
-			<td><input id="market_price" value="0.00" class="enter-item"/></td>	
+			<td><input id="market_price" value="0.00" class="enter-item" placeholder="蛋糕填写1磅价格"/></td>	
 		</tr>
 		<tr>
 			<td>关键字<br>(keywords)</td>
-			<td><input id="keywords" class="enter-item"/></td>	
+			<td><input id="keywords" class="enter-item"  placeholder="用于搜索功能，可以不填"/></td>	
 		</tr>
 		<tr>
 			<td>商品描述<br>(goods_desc)</td>
-			<td><input id="goods_desc" class="enter-item"/></td>	
+			<td><input id="goods_desc" class="enter-item" /></td>	
 		</tr>
 		<tr style="display:none">
 			<td>是否含酒精<br>(is_wine)</td>
