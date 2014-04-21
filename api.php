@@ -86,6 +86,10 @@ switch($action){
 		$data = $db->getAll('select * from ecs_goods');
 		echo json_encode(array('data'=>$data));
 		break;
+   case 'get_online_goods_list':
+		$data = $db->getAll('select * from ecs_goods where is_on_sale="1"');
+		echo json_encode(array('data'=>$data));
+		break;
    
    case 'get_goods_attr_by_id':
 	   $goods_id = ANTI_SPAM($_POST['id']);
@@ -326,5 +330,81 @@ switch($action){
 			echo 'fail';
 		 }
 		 break;
+	case 'get_goods_by_cato':
+		 $goods = file_get_contents("../goodsconfig.json");
+		 $goods = json_decode($goods,true);
+		 
+		 foreach($goods as $key=>$value){
+			$count = count($value['cato']);
+			for($i=0;$i<$count;$i++){
+				$d = $value['cato'][$i]['data'];
+				$goods[$key]['cato'][$i]['detail']=array();
+				for($j=0;$j<count($d);$j++){
+					$id = $d[$j];
+					$sql = "select * from ecs_goods where goods_id=".$id;
+					$goods_data = $db->getAll($sql);
+					$goods_data = $goods_data[0];
+					array_push($goods[$key]['cato'][$i]['detail'],$goods_data);
+				}
+			}
+
+		 }
+		 echo json_encode(array(data=>$goods));
+		 break;
+		//商品加到一个分类当中
+		case 'add_goods_to_cato': 
+			$id = $_POST['id'];
+			$cato = $_POST['cato'];
+			$child_cato = $_POST['child_cato'];
+
+			$goods = file_get_contents("../goodsconfig.json");
+			$goods = json_decode($goods,true);
+			$d = $goods[$cato]['cato'];
+			for($i=0;$i<count($d);$i++){
+				if($d[$i]['name'] == $child_cato ){
+				  if(!in_array($id,$d[$i]['data'])){
+					array_push($goods[$cato]['cato'][$i]['data'],$id);
+					break;
+				  }
+				}
+			}
+			$goods = json_encode($goods);
+			if(file_put_contents("../goodsconfig.json",$goods)){
+				echo 'success';
+			}else{
+				echo 'fail';
+			}
+		break;
+
+		//商品加到一个分类当中
+		case 'del_goods_from_cato': 
+			$id = $_POST['id'];
+			$cato = $_POST['cato'];
+			$child_cato = $_POST['child_cato'];
+
+			$goods = file_get_contents("../goodsconfig.json");
+			$goods = json_decode($goods,true);
+			$d = $goods[$cato]['cato'];
+			for($i=0;$i<count($d);$i++){
+				if($d[$i]['name'] == $child_cato ){
+				  if(in_array($id,$d[$i]['data'])){
+					$res = array();
+					for($m=0;$m<count($d[$i]['data']);$m++){
+						if($d[$i]['data'][$m]!=$id){
+							array_push($res,$d[$i]['data'][$m]);
+						}
+					}
+					$goods[$cato]['cato'][$i]['data']=$res;
+					break;
+				  }
+				}
+			}
+			$goods = json_encode($goods);
+			if(file_put_contents("../goodsconfig.json",$goods)){
+				echo 'success';
+			}else{
+				echo 'fail';
+			}
+		break;
  }
 ?>
