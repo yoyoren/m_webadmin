@@ -42,13 +42,17 @@
 						<option value="8">是否含酒</option>
 						<option value="9">原料</option>
 						<option value="11">产品描述</option>
+						<option value="20">可切块</option>
+						<option value="21">可做无糖</option>
+						<option value="22">可切块数</option>
+						<option value="23">无糖规格</option>
 					</select>
 					
 				</td>	
 			</tr>
 			<tr id="attr_price_col">
 				<td>价格(attr_price):</td>
-				<td><input id="attr_price" class="enter-item" value="0"/></td>	
+				<td><input id="attr_price" class="enter-item" value="0"  placeholder="填写价格"/></td>	
 			</tr>
 			<tr>
 				<td>描述(attr_value):</td>
@@ -103,6 +107,21 @@
 						<option>含糖</option>
 						<option>不含糖</option>
 					</select>
+					<select id="attr_cut" style="display:none">
+						<option value="1">可切</option>
+						<option value="0">不可切</option>
+					</select>
+					<select id="attr_nosugar" style="display:none">
+						<option value="1">可做</option>
+						<option value="0">不可做</option>
+					</select>
+					<select id="attr_nosugar_weight" style="display:none">
+						<option value="0">选择磅重</option>
+					</select>
+					<select id="attr_cut_weight" style="display:none">
+						<option value="0">选择磅重</option>
+					</select>
+					<input id="attr_cut_num" class="enter-item" style="display:none" placeholder="填写可切块数"/>
 				</td>	
 			</tr>
 			<tr>
@@ -112,6 +131,88 @@
 
 	</table>
 </div>
+<div style="display:none" id="mod_dialog" title="修改已有的商品">
+	<table cellpadding="0" cellspacing="0" style="border-top:0 none;">
+		<tr>
+			<td>SN<br>(goods_sn):</td>
+			<td><input id="mod_goods_sn" class="enter-item" placeholder="货号前3位不能重复" disabled="disabled"/></td>	
+		</tr>
+		<tr style="display:none">
+			<td>商品类型<br>(goods_type):</td>
+			<td>
+				<select id="mod_goods_type">
+					
+					<option value="1">蛋糕</option>
+					<option value="2">附属配件（例如餐具，蜡烛）</option>
+					<option value="3">鲜花</option>
+				</select>
+			</td>	
+		</tr>
+		<tr>
+			<td>名称<br>(goods_name)</td>
+			<td><input id="mod_goods_name"  class="enter-item" placeholder="最多20个字"/></td>	
+		</tr>
+		<tr style="display:none">
+			<td >分类<br>(cat_id)</td>
+			<td>
+				<select id="mod_cat_id">
+				<option value="0">请选择（配件可以不选）</option>
+				<?php
+					$contents = json_decode(file_get_contents("../goodsconfig.json"),true);
+					foreach($contents as $key=>$val){
+						$str = '<option value="'.$key.'">'.$val['name'].'</option>';
+						echo $str;
+					}
+				?>
+				</select>
+				<select id="mod_child_cat_id" style="display:none">
+					<option value="0">请选择</option>
+				</select>
+			</td>	
+		</tr>
+
+		<tr>
+			<td>市场价格<br>(market_price,蛋糕填写1磅价格)</td>
+			<td><input id="mod_market_price" value="0.00" class="enter-item" placeholder="蛋糕填写1磅价格"/></td>	
+		</tr>
+		<tr>
+			<td>关键字<br>(keywords)</td>
+			<td><input id="mod_keywords" class="enter-item"  placeholder="用于搜索功能，可以不填"/></td>	
+		</tr>
+		<tr>
+			<td>商品描述<br>(goods_desc)</td>
+			<td><input id="mod_goods_desc" class="enter-item"  placeholder=""/></td>	
+		</tr>
+		<tr>
+			<td>产品封面图片<br>(goods_thumb)</td>
+			<td>
+			 <span id="mod_goods_image_upload_tip"></span>
+			 <img id="mod_goods_image" style="display:none" width="75">
+			 <input type="hidden" id="mod_goods_thumb">
+			 <form id="mod_goods_image_file_form">
+				 <input type="file" id="mod_goods_image_file" name="images">
+			 </form>
+			</td>	
+		</tr>
+		<tr>
+			<td>产品页面<br>（请联系猪爷索要）</td>
+			<td>
+			  <span id="mod_goods_tmpl_upload_tip"></span>
+			  <input type="hidden" id="mod_goods_tmpl">
+			  <form id="mod_goods_tmpl_file_form">
+				 <input type="file" id="mod_goods_tmpl_file" name="page">
+			 </form>
+			</td>	
+		</tr>
+		<tr>
+			<td>操作</td>
+			<td>
+				<button class="button" id="mod_goods_button">确认修改</button>
+			</td>	
+		</tr>
+	</table>
+</div>
+
 <div style="display:none" id="add_dialog" title="添加商品">
 	<table cellpadding="0" cellspacing="0" style="border-top:0 none;">
 		<tr>
@@ -262,6 +363,15 @@
 </body>
 
 <script>
+	var ATTR_PRODUCT_SIZE = '6';
+	var ATTR_HAS_SUGAR = '7';
+	var ATTR_HAS_WINE = '8';
+	var ATTR_MATERIAL = '9';
+	var ATTR_DESC = '11';
+	var ATTR_CUT = '20';
+	var ATTR_NO_SUAGR = '21';
+	var ATTR_CUT_NUM = '22';
+	var ATTR_SUAGR_PRICE = '23';
 	var CURRENT_GOODS_ID;
 	//确认添加一个新的属性
 	$('#add_attr_button').click(function(){
@@ -272,12 +382,18 @@
 		var attr_weight = $('#attr_weight').val();
 		var attr_people = $('#attr_people').val();
 		var attr_size = $('#attr_size').val();
-		if(attr_type==6){
-			attr_value = attr_weight+':'+attr_size+attr_people;
-		}else if(attr_type==7){
+		if(attr_type==ATTR_PRODUCT_SIZE||attr_type==ATTR_SUAGR_PRICE){
+			attr_value = attr_weight+'：'+attr_size+attr_people;
+		}else if(attr_type==ATTR_HAS_SUGAR){
 			attr_value = $('#attr_sugar').val();
-		}else if(attr_type==8){
+		}else if(attr_type==ATTR_HAS_WINE){
 			attr_value = $('#attr_wine').val();
+		}else if(attr_type==ATTR_NO_SUAGR){
+			attr_value = $('#attr_nosugar').val();
+		}else if(attr_type==ATTR_CUT){
+			attr_value = $('#attr_cut').val();
+		}else if(attr_type==ATTR_CUT_NUM){
+			attr_value = $('#attr_cut').val();
 		}
 
 		$.post('api.php?action=add_attr',{
@@ -354,10 +470,11 @@
 		   //html+='<td>'+current.is_alone_sale+'</td>';
 		    html+='<td>'+current.market_price+'</td>';
 		   html+='<td width="150">\
-		   <button class="button expand_button" data-id="'+current.goods_id+'">详细</button>\
+		   <button class="button expand_button" data-id="'+current.goods_id+'">详情</button>\
 		   <button class="button offline_button" data-id="'+current.goods_id+'">下架</button>\
 		   <button class="button online_button" data-id="'+current.goods_id+'">上架</button>\
-		   <button class="button add_attr_button" data-id="'+current.goods_id+'" data-name="'+current.goods_name+'">添加</button>\
+		   <button class="button mod_button" data-id="'+current.goods_id+'">修改</button>\
+		   <button class="button add_attr_button" data-id="'+current.goods_id+'" data-name="'+current.goods_name+'">添加产品属性</button>\
 			</tr>';
 		}
 		$('#exsit_list').append(html);
@@ -378,21 +495,32 @@
 			for(var i=0;i<data.length;i++){
 				var d = data[i];
 				var type =d.attr_id;
-				if(d.attr_id == 6){
-					type = '产品规格'
-				}else if(d.attr_id == 7){
-					type= '是否含糖'
-				}else if(d.attr_id == 8){
-					type= '是否含酒'
-				}else if(d.attr_id == 9){
-					type= '原料'
-				}else if(d.attr_id == 11){
-					type= '产品描述'
+				if(d.attr_id == ATTR_PRODUCT_SIZE){
+					type = '产品规格';
+				}else if(d.attr_id == ATTR_HAS_SUGAR){
+					type= '是否含糖';
+				}else if(d.attr_id == ATTR_HAS_WINE){
+					type= '是否含酒';
+				}else if(d.attr_id == ATTR_MATERIAL){
+					type= '原料';
+				}else if(d.attr_id == ATTR_DESC){
+					type= '产品描述';
 				}else if(d.attr_id == 3){
-					type= '产品用途'
+					type= '产品用途';
+				}else if(d.attr_id == ATTR_CUT){
+					type= '是否可做切块';
+				}else if(d.attr_id == ATTR_NO_SUAGR){
+					type= '是否可做无糖';
+				}else if(d.attr_id == ATTR_CUT_NUM){
+					type= '切块规格';
+				}else if(d.attr_id == ATTR_SUAGR_PRICE){
+					type= '无糖规格';
+				}
+				if(d.attr_price == 0){
+					d.attr_price = '——';
 				}
 				html+='<tr id="attr_col_'+d.goods_attr_id+'"><td>'+type+'</td>';
-				html+='<td>'+(d.attr_price||'0')+'</td>';
+				html+='<td>'+(d.attr_price||'无')+'</td>';
 				html+='<td>'+d.attr_value+'</td>';
 				html+='<td><button class="button del_attr" data-id="'+d.goods_attr_id+'">删除</button></td></tr>';
 			}
@@ -441,6 +569,26 @@
 			width:450,
 			position:{ my: "top", at: "top", of: window }
 		});
+	}).delegate('.mod_button','click',function(){
+		var _this = $(this);
+		var id=_this.data('id');
+		$.get('api.php?action=get_goods_by_id',{
+			id:id
+		},function(d){
+			var d = d.data;
+			$('#mod_goods_sn').val(d.goods_sn);
+			$('#mod_goods_name').val(d.goods_name);
+			$('#mod_market_price').val(d.market_price);
+			$('#mod_keywords').val(d.keywords);
+			$('#mod_goods_desc').val(d.goods_desc);
+			$('#mod_goods_image').attr('src','/themes/default/images/sgoods/'+d.goods_sn.substring(0,3)+'.jpg').show();
+			$( "#mod_dialog" ).dialog({
+				modal:true,
+				width:450,
+				position:{ my: "top", at: "top", of: window }
+			});
+		},'json');
+		return;
 	});
 
 	$('#cat_id').change(function(){
@@ -463,6 +611,18 @@
 		}
 	});
 	
+	var getProductWeight = function(id,cb){
+			$.get('api.php?action=get_weight_by_id',{
+				id:id||CURRENT_GOODS_ID
+			},function(d){
+				var d = d.data;
+				var html = '';
+				for (var i=0;i<d.length ;i++ ){
+					html+='<option value="'+d[i].goods_attr_id+'">'+d[i].attr_value+'</option>'
+				}
+				cb(html);
+			},'json');
+	}
 	$('#attr_type').change(function(){
 		var type = $(this).val();
 		$('#attr_weight').hide();
@@ -471,27 +631,52 @@
 		$('#attr_wine').hide();
 		$('#attr_sugar').hide();
 		$('#attr_size').hide();
+		$('#attr_cut').hide();
+		$('#attr_cut_weight').hide();
+		$('#attr_nosugar').hide();
+		$('#attr_nosugar_weight').hide();
+		
 		$('#attr_value').show();
 		switch(type){
 			case '3':break;
 			case '6':
-			$('#attr_weight').show();
-			$('#attr_people').show();
-			$('#attr_size').show();
-			$('#attr_price_col').show();
-
-			$('#attr_value').hide();
+				$('#attr_weight').show();
+				$('#attr_people').show();
+				$('#attr_size').show();
+				$('#attr_price_col').show();
+				$('#attr_value').hide();
 			break; 
-			case '7':
-			$('#attr_sugar').show();
-			$('#attr_value').hide();
+			case ATTR_HAS_SUGAR:
+				$('#attr_sugar').show();
+				$('#attr_value').hide();
 			break; 
-			case '8':
-			$('#attr_wine').show();
-			$('#attr_value').hide();
-			break; 
+			case ATTR_HAS_WINE:
+				$('#attr_wine').show();
+				$('#attr_value').hide();
+				break; 
 			case '9':break; 
-			case '11':break; 
+			case '11':break;
+			case ATTR_CUT:
+				$('#attr_cut').show();
+				$('#attr_value').hide();
+				break; 
+			case ATTR_NO_SUAGR:
+				$('#attr_nosugar').show();
+				$('#attr_value').hide();
+				break;
+			case ATTR_CUT_NUM:
+				$('#attr_value').hide();
+				getProductWeight(CURRENT_GOODS_ID,function(d){
+					$('#attr_cut_weight').html(d).show();
+				});
+				break;
+			case ATTR_SUAGR_PRICE:
+				$('#attr_weight').show();
+				$('#attr_people').show();
+				$('#attr_size').show();
+				$('#attr_price_col').show();
+				$('#attr_value').hide();
+				break;
 		}
 	});
 	
@@ -506,9 +691,7 @@
 		}
 
 		this.jqForm = $('#'+this.opt.formId);
-		this.jqInput = $('#'
-      +
-      this.opt.inputId);
+		this.jqInput = $('#' +this.opt.inputId);
       this.init();
 
       }

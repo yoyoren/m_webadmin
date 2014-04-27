@@ -352,6 +352,13 @@ switch($action){
 		 echo json_encode(array(data=>$goods));
 		 break;
 		//商品加到一个分类当中
+		case 'get_goods_by_id':
+			$id = $_GET['id'];
+			$sql = "select * from ecs_goods where goods_id=".$id;
+			$goods_data = $db->getAll($sql);
+			$goods_data = $goods_data[0];
+			echo json_encode(array(data=>$goods_data));
+		break;
 		case 'add_goods_to_cato': 
 			$id = $_POST['id'];
 			$cato = $_POST['cato'];
@@ -405,6 +412,12 @@ switch($action){
 			}else{
 				echo 'fail';
 			}
+		break;
+	case 'get_weight_by_id':
+		$id = $_GET['id'];
+		$sql = "select * from ecs_goods_attr where attr_id=6 and goods_id=".$id;
+		$data = $db->getAll($sql);
+		echo json_encode(array('data'=>$data));
 		break;
  }
 ?>
