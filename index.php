@@ -393,7 +393,8 @@
 		}else if(attr_type==ATTR_CUT){
 			attr_value = $('#attr_cut').val();
 		}else if(attr_type==ATTR_CUT_NUM){
-			attr_value = $('#attr_cut').val();
+			attr_value = $('#attr_cut_weight').val();
+			attr_price = $('#attr_cut_num').val();
 		}
 
 		$.post('api.php?action=add_attr',{
@@ -509,6 +510,7 @@
 					type= '产品用途';
 				}else if(d.attr_id == ATTR_CUT){
 					type= '是否可做切块';
+					d.attr_price = '切'+d.attr_price+'块';
 				}else if(d.attr_id == ATTR_NO_SUAGR){
 					type= '是否可做无糖';
 				}else if(d.attr_id == ATTR_CUT_NUM){
@@ -618,7 +620,7 @@
 				var d = d.data;
 				var html = '';
 				for (var i=0;i<d.length ;i++ ){
-					html+='<option value="'+d[i].goods_attr_id+'">'+d[i].attr_value+'</option>'
+					html+='<option>'+d[i].attr_value+'</option>'
 				}
 				cb(html);
 			},'json');
@@ -635,7 +637,7 @@
 		$('#attr_cut_weight').hide();
 		$('#attr_nosugar').hide();
 		$('#attr_nosugar_weight').hide();
-		
+		$('#attr_cut_num').hide();
 		$('#attr_value').show();
 		switch(type){
 			case '3':break;
@@ -668,6 +670,7 @@
 				$('#attr_value').hide();
 				getProductWeight(CURRENT_GOODS_ID,function(d){
 					$('#attr_cut_weight').html(d).show();
+					$('#attr_cut_num').show();
 				});
 				break;
 			case ATTR_SUAGR_PRICE:
@@ -692,7 +695,7 @@
 
 		this.jqForm = $('#'+this.opt.formId);
 		this.jqInput = $('#' +this.opt.inputId);
-      this.init();
+		this.init();
 
       }
 

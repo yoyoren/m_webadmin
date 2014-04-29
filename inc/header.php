@@ -5,7 +5,6 @@
 <script src="js/jquery-ui-1.10.4.js"></script>
 <style>
 html,body{height: 100%; width: 100%;}
-html{overflow: hidden;}
 body{overflow: auto;}
 .button{font-size:12px}
 table{font-size:12px;}
