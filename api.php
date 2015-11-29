@@ -36,7 +36,7 @@ function check_login(){
 		return false;
 	}
 }
-
+/*
 if($action!='admin_login'){
 	if(!check_login()){
 		echo '<script>location.href="login.php"</script>';
@@ -44,6 +44,7 @@ if($action!='admin_login'){
 		die;
 	}
 }
+*/
 switch($action){
 	 //管理员登陆
    case 'admin_login':
@@ -236,6 +237,7 @@ switch($action){
 				 echo "<script>window.ret='".json_encode(array('code'=>2,'msg'=>'文件格式不支持'))."'</script>";
 				 return;
 			}
+			
 			$filename = date("YmdHis");
 			$url = 'themes/default/images/sgoods/' . $filename . '.jpg';  
 			$upfile = ROOT_PATH.$url;
@@ -281,7 +283,13 @@ switch($action){
 		$banner = json_decode($banner,true);
 		echo json_encode(array('data'=>$banner));
 		break;
-	 
+		
+	 case 'get_wx_banner_list':
+		$banner = file_get_contents("../index_wx_config.json");
+		$banner = json_decode($banner,true);
+		echo json_encode(array('data'=>$banner));
+		break;
+		
 	 case 'add_banner':
 		 $pos = $_POST['pos'];
 		 $title = $_POST['title'];
@@ -310,7 +318,41 @@ switch($action){
 		 }
 		 
 		break;
-
+		case 'add_wx_banner':
+				 $pos = $_POST['pos'];
+				 $title = $_POST['title'];
+				 $desc = $_POST['desc'];
+				 $link = $_POST['link'];
+				 
+				 $banner_thumb = $_POST['banner_thumb'];
+				 $banner = file_get_contents("../index_wx_config.json");
+				 $banner = json_decode($banner,true);
+				 $new_banner = array(
+					'desc'=>$desc,
+					'title'=>$title,
+					'img'=>$banner_thumb,
+					'link'=>$link
+				 );
+				 
+				 if($pos == 1){
+					array_unshift($banner,$new_banner);
+				 }else if($pos == 2){
+					array_push($banner,$new_banner);
+				 }
+				 $banner = json_encode($banner);
+				 //var_dump($banner);
+				 if($banner == null || $banner == 'null'){
+					 $banner = array($new_banner);
+					 $banner = json_encode($banner);
+				 }
+				 //var_dump($banner);
+				 if(file_put_contents("../index_wx_config.json",$banner)){
+					echo 'success';
+				 }else{
+					echo 'fail';
+				 }
+				 
+				break;
 	 case 'del_banner':
 		 $index = $_POST['index'];
 		 $banner = file_get_contents("../indexconfig.json");
@@ -325,6 +367,26 @@ switch($action){
 
 		 $banner = json_encode($res);
 		 if(file_put_contents("../indexconfig.json",$banner)){
+			echo 'success';
+		 }else{
+			echo 'fail';
+		 }
+		 break;
+		 
+     case 'del_wx_banner':
+		 $index = $_POST['index'];
+		 $banner = file_get_contents("../index_wx_config.json");
+		 $banner = json_decode($banner,true);
+		 $res = array();
+
+		 for($i=0;$i<count($banner);$i++){
+			if($i!=$index){
+				array_push($res,$banner[$i]);
+			}
+		 }
+
+		 $banner = json_encode($res);
+		 if(file_put_contents("../index_wx_config.json",$banner)){
 			echo 'success';
 		 }else{
 			echo 'fail';
