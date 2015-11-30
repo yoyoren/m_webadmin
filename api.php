@@ -290,6 +290,54 @@ switch($action){
 		echo json_encode(array('data'=>$banner));
 		break;
 		
+	 case 'get_weixin_home':
+	     $orgin_data = file_get_contents("../index_wx_goods_config.json");
+		 echo $orgin_data;
+	     break;
+		 
+	 case 'del_from_weixin_home':
+	     $id = $_REQUEST['id'];
+		 $orgin_data = file_get_contents("../index_wx_goods_config.json");
+		 $orgin_data = json_decode($orgin_data,true);
+		 $temp = array();
+		 
+		 for($i=0;$i<count($orgin_data);$i++){
+			if($orgin_data[$i]['id'] != $id){
+				array_push($temp,$orgin_data[$i]);
+			}
+		 }
+		 
+		 $data = json_encode($temp);
+		 file_put_contents("../index_wx_goods_config.json",$data);
+		 echo 0;
+	     break;
+		 
+	 case 'add_to_weixin_home':
+		 $id = $_POST['id'];
+		 $sql = "SELECT * FROM ecs_goods WHERE goods_id=".$id;
+		 $goods = $db->getAll($sql)[0];
+		 $save = array(
+		   'name'=>$goods['goods_name'],
+		   'sn'=>$goods['goods_sn'],
+		   'id'=>$goods['goods_id'],
+		   'img'=>'/themes/default/images/sgoods/'.substr($goods['goods_sn'],0,3).'.jpg',
+		 ); 
+		
+		 $orgin_data = file_get_contents("../index_wx_goods_config.json");
+		 $orgin_data = json_decode($orgin_data);
+		 //var_dump($orgin_data);
+		 if($orgin_data){
+		   array_push($orgin_data,$save); 
+		   $orgin_data = json_encode($orgin_data);
+		   //var_dump($orgin_data);
+		   file_put_contents("../index_wx_goods_config.json",$orgin_data);
+		 }else{
+		   $save = json_encode(array($save));
+		   file_put_contents("../index_wx_goods_config.json",$save);
+		 }
+		 echo 0;
+		 //var_dump($goods);
+		 break;
 	 case 'add_banner':
 		 $pos = $_POST['pos'];
 		 $title = $_POST['title'];
