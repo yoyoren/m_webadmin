@@ -574,6 +574,7 @@
 	}).delegate('.mod_button','click',function(){
 		var _this = $(this);
 		var id=_this.data('id');
+		window.currentModGoods = id;
 		$.get('api.php?action=get_goods_by_id',{
 			id:id
 		},function(d){
@@ -591,6 +592,22 @@
 			});
 		},'json');
 		return;
+	});
+	
+	$('#mod_goods_button').click(function(){
+		$.post('api.php?action=mod_goods',{
+			id:window.currentModGoods,
+			goods_sn:$('#mod_goods_sn').val(),
+			goods_name:$('#mod_goods_name').val(),
+			market_price:$('#mod_market_price').val(),
+			keywords:$('#mod_keywords').val(),
+			goods_desc:$('#mod_goods_desc').val()
+		},function(d){
+			if(d.code == 0){
+				alert('修改成功')
+			}
+		},'json');
+		
 	});
 
 	$('#cat_id').change(function(){

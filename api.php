@@ -469,6 +469,20 @@ switch($action){
 			$goods_data = $goods_data[0];
 			echo json_encode(array(data=>$goods_data));
 		break;
+		case 'mod_goods':
+			  $id = ANTI_SPAM($_POST['id']);
+			  $goods_sn = ANTI_SPAM($_POST['goods_sn']);
+			  $goods_name = ANTI_SPAM($_POST['goods_name']);
+			  $goods_desc = ANTI_SPAM($_POST['goods_desc']);
+			  $market_price = ANTI_SPAM($_POST['market_price']);
+			  $keywords = ANTI_SPAM($_POST['keywords']);
+			  $sql = "update ecs_goods set goods_name='".$goods_name."' where goods_id=".$id;
+			  $res = $db->query($sql);
+			  echo json_encode(array(
+					'code'=>0,
+					'res'=>$res, 
+				));
+		      break;
 		case 'add_goods_to_cato': 
 			$id = $_POST['id'];
 			$cato = $_POST['cato'];
